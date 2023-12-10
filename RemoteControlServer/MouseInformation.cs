@@ -13,6 +13,10 @@ namespace RemoteControlServer
     {
         public const Int32 CURSOR_SHOWING = 0x00000001;
 
+        [DllImport("user32.dll")]
+        public static extern void SetCursorPos(int x, int y);
+
+
         [StructLayout(LayoutKind.Sequential)]
         public struct ICONINFO
         {
@@ -86,6 +90,53 @@ namespace RemoteControlServer
                 }
             }
             return bitmap;
+        }
+
+        public static (int X, int Y) ScaleCoordinates(int oldImageWidth, int oldImageHeight, int newImageWidth, int newImageHeight, int mouseX, int mouseY)
+        {
+            double scaleX = (double)newImageWidth / oldImageWidth;
+            double scaleY = (double)newImageHeight / oldImageHeight;
+
+            mouseX = (int)(mouseX * scaleX);
+            mouseY = (int)(mouseY * scaleY);
+            return (mouseX, mouseY);
+        }
+
+        [DllImport("user32.dll")]
+        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
+
+        public static void SimulateLeftMouseClick(int X, int Y)
+        {
+            mouse_event((uint)MouseEventFlags.MouseMove, (uint)X, (uint)Y, 0, 0);
+        }
+
+        // Метод для имитации нажатия правой кнопки мыши
+        public static void SimulateRightMouseClick(int X, int Y)
+        {
+        }
+
+        public static void ProcessMouseActions(MouseActions mouseAction, int X, int Y)
+        {
+            uint dwFlags = 0;
+
+            switch (mouseAction)
+            {
+                case MouseActions.MouseLeft:
+                    dwFlags = (uint)(MouseEventFlags.MouseLeftDown | MouseEventFlags.MouseLeftUp);
+                    break;
+                case MouseActions.MouseRight:
+                    dwFlags = (uint)(MouseEventFlags.MouseRightDown | MouseEventFlags.MouseRightUp);
+                    break;
+                case MouseActions.MouseDoubleClick:
+                    mouse_event((uint)(MouseEventFlags.MouseLeftDown | MouseEventFlags.MouseLeftUp), (uint)X, (uint)Y, 0, 0);
+                    mouse_event((uint)(MouseEventFlags.MouseLeftDown | MouseEventFlags.MouseLeftUp), (uint)X, (uint)Y, 0, 0);
+                    break;
+                case MouseActions.MouseMove:
+                    SetCursorPos(X, Y);
+                    break;
+            }
+
+            mouse_event(dwFlags, (uint)X, (uint)Y, 0, 0);
         }
     }
 }

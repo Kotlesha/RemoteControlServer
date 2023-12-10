@@ -15,8 +15,8 @@ namespace RemoteControlServer
         public static string GetImage(long quality = 50)
         {
             Bitmap screenshot = TakeScreenshot();
-            MemoryStream stream = CompressImage(ref screenshot, quality);
-            return GetResultImageString(ref stream);
+            using MemoryStream stream = CompressImage(screenshot, quality);
+            return GetResultImageString(stream);
         }
 
         private static Bitmap TakeScreenshot()
@@ -27,7 +27,7 @@ namespace RemoteControlServer
             return screenshot;
         }
 
-        private static MemoryStream CompressImage(ref Bitmap image, long quality)
+        private static MemoryStream CompressImage(Bitmap image, long quality)
         {
             EncoderParameters encoderParams = new(1);
             encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, quality);
@@ -38,7 +38,7 @@ namespace RemoteControlServer
             return ms;
         }
 
-        private static string GetResultImageString(ref MemoryStream ms)
+        private static string GetResultImageString(MemoryStream ms)
         {
             ms.Position = 0;
             byte[] bytes = ms.ToArray();

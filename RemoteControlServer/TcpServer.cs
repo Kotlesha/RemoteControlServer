@@ -50,17 +50,23 @@ namespace RemoteControlServer
 
                 while (!Cts.IsCancellationRequested)
                 {
+                    int bytesRead = await stream.ReadAsync(buffer, Cts.Token);
+                    string jsonRequest = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    Request request;
                     try
                     {
-                        int bytesRead = await stream.ReadAsync(buffer, Cts.Token);
-                        string jsonRequest = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                        Request request = JsonSerializer.Deserialize<Request>(jsonRequest);
-                        Response response = ProcessingRequests.GetResponseOnRequest(request, askPermission);
-                        string jsonResponse = JsonSerializer.Serialize(response);
-                        byte[] bytesWrite = Encoding.UTF8.GetBytes(jsonResponse);
-                        await stream.WriteAsync(bytesWrite, Cts.Token);
-                        await stream.FlushAsync();
-                    } catch (JsonException) { continue; }
+                        request = JsonSerializer.Deserialize<Request>(jsonRequest);
+                    }
+                    catch
+                    {
+                        File.AppendAllText("str1.txt", jsonRequest + "\n");
+                        continue;
+                    }
+                    Response response = ProcessingRequests.GetResponseOnRequest(request, askPermission);
+                    string jsonResponse = JsonSerializer.Serialize(response);
+                    byte[] bytesWrite = Encoding.UTF8.GetBytes(jsonResponse);
+                    await stream.WriteAsync(bytesWrite, Cts.Token);
+                    await stream.FlushAsync();
                 }
             }
         }

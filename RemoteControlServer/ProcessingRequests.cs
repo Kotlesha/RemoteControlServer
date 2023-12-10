@@ -5,14 +5,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using static RemoteControlServer.Keyboard;
 
 namespace RemoteControlServer
 {
     internal static class ProcessingRequests
     {
-        [DllImport("user32.dll")]
-        private static extern void SetCursorPos(int x, int y);
-
         public static Response GetResponseOnRequest(Request request, Func<string, bool> askPermission = null)
         {
             Response response = new() { IdOperation = request.IdOperation };
@@ -30,12 +28,21 @@ namespace RemoteControlServer
                     response.ResultData = jsonImage;
                     break;
                 case 2:
-                    Point point = JsonSerializer.Deserialize<Point>(request.JsonData);
-                    SetCursorPos(point.X, point.Y);
+                    int[] data = JsonSerializer.Deserialize<int[]>(request.JsonData);
+                    var screenSize = Screen.PrimaryScreen.Bounds;
+                    var point = MouseInformation.ScaleCoordinates(data[0], data[1], screenSize.Width, screenSize.Height, data[2], data[3]);
+                    MouseInformation.SetCursorPos(point.X, point.Y);
+                    MouseInformation.ProcessMouseActions((MouseActions)data[4], point.X, point.Y);
                     code = 200;
                     response.ResultData = code.ToString();
                     break;
-
+                case 3:
+                    int keyCode = JsonSerializer.Deserialize<int>(request.JsonData);
+                    uint scanCode = MapVirtualKeyEx((uint)keyCode, 0, IntPtr.Zero);
+                    Send((ScanCodeShort)scanCode);
+                    code = 200;
+                    response.ResultData = code.ToString();
+                    break;
             }
 
             return response;
