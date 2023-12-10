@@ -1,4 +1,4 @@
-﻿namespace RemoteControlServer
+﻿namespace RemoteControlServer.Views
 {
     partial class StartServerForm
     {
@@ -35,7 +35,7 @@
             label3 = new Label();
             portNumberNumericUpDown = new NumericUpDown();
             label2 = new Label();
-            ipAdressTextBox = new TextBox();
+            ipAddressTextBox = new TextBox();
             label1 = new Label();
             panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)portNumberNumericUpDown).BeginInit();
@@ -49,7 +49,7 @@
             panel1.Controls.Add(label3);
             panel1.Controls.Add(portNumberNumericUpDown);
             panel1.Controls.Add(label2);
-            panel1.Controls.Add(ipAdressTextBox);
+            panel1.Controls.Add(ipAddressTextBox);
             panel1.Location = new Point(12, 21);
             panel1.Name = "panel1";
             panel1.Size = new Size(300, 181);
@@ -105,11 +105,11 @@
             // 
             // ipAdressTextBox
             // 
-            ipAdressTextBox.Location = new Point(13, 39);
-            ipAdressTextBox.Name = "ipAdressTextBox";
-            ipAdressTextBox.ReadOnly = true;
-            ipAdressTextBox.Size = new Size(269, 26);
-            ipAdressTextBox.TabIndex = 0;
+            ipAddressTextBox.Location = new Point(13, 39);
+            ipAddressTextBox.Name = "ipAdressTextBox";
+            ipAddressTextBox.ReadOnly = true;
+            ipAddressTextBox.Size = new Size(269, 26);
+            ipAddressTextBox.TabIndex = 0;
             // 
             // label1
             // 
@@ -130,7 +130,6 @@
             FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
-            MinimizeBox = false;
             Name = "StartServerForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Удалённый рабочий стол";
@@ -150,7 +149,7 @@
         private Label label3;
         private NumericUpDown portNumberNumericUpDown;
         private Label label2;
-        private TextBox ipAdressTextBox;
+        private TextBox ipAddressTextBox;
         private Button StopServer;
     }
 }

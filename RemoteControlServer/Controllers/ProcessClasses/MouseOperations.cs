@@ -1,63 +1,64 @@
-﻿using Microsoft.VisualBasic.ApplicationServices;
-using System;
-using System.Collections.Generic;
+﻿using RemoteControlServer.Models;
 using System.Drawing.Imaging;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace RemoteControlServer
+namespace RemoteControlServer.Controllers.ProcessClasses
 {
-    internal class MouseInformation
+    internal class MouseOperations
     {
-        public const Int32 CURSOR_SHOWING = 0x00000001;
-
-        [DllImport("user32.dll")]
-        public static extern void SetCursorPos(int x, int y);
-
+        private const int CURSOR_SHOWING = 0x00000001;
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct ICONINFO
+        private struct ICONINFO
         {
             public bool fIcon;
-            public Int32 xHotspot;
-            public Int32 yHotspot;
+            public int xHotspot;
+            public int yHotspot;
             public IntPtr hbmMask;
             public IntPtr hbmColor;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct POINT
+        private struct POINT
         {
-            public Int32 x;
-            public Int32 y;
+            public int x;
+            public int y;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct CURSORINFO
+        private struct CURSORINFO
         {
-            public Int32 cbSize;
-            public Int32 flags;
+            public int cbSize;
+            public int flags;
             public IntPtr hCursor;
             public POINT ptScreenPos;
         }
 
         [DllImport("user32.dll")]
-        public static extern bool GetCursorInfo(out CURSORINFO pci);
+        public static extern void SetCursorPos(int x, int y);
 
         [DllImport("user32.dll")]
-        public static extern IntPtr CopyIcon(IntPtr hIcon);
+        private static extern bool GetCursorInfo(out CURSORINFO pci);
 
         [DllImport("user32.dll")]
-        public static extern bool DrawIcon(IntPtr hdc, int x, int y, IntPtr hIcon);
+        private static extern IntPtr CopyIcon(IntPtr hIcon);
 
         [DllImport("user32.dll")]
-        public static extern bool GetIconInfo(IntPtr hIcon, out ICONINFO piconinfo);
+        private static extern bool DrawIcon(IntPtr hdc, int x, int y, IntPtr hIcon);
 
-        public static Bitmap Capture(int x, int y, int width, int height)
+        [DllImport("user32.dll")]
+        private static extern bool GetIconInfo(IntPtr hIcon, out ICONINFO piconinfo);
+
+        [DllImport("user32.dll")]
+        private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
+
+
+        public static Bitmap CaptureImageWithCursor(int width, int height)
         {
+            GetCursorInfo(out CURSORINFO Cursor);
+            int x = Cursor.ptScreenPos.x, y = Cursor.ptScreenPos.y;
             var bitmap = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+
             using (Graphics g = Graphics.FromImage(bitmap))
             {
                 g.CopyFromScreen(x, y, 0, 0, bitmap.Size, CopyPixelOperation.SourceCopy);
@@ -67,28 +68,22 @@ namespace RemoteControlServer
 
                 if (GetCursorInfo(out cursorInfo))
                 {
-                    // if the cursor is showing draw it on the screen shot
                     if (cursorInfo.flags == CURSOR_SHOWING)
                     {
-                        // we need to get hotspot so we can draw the cursor in the correct position
                         var iconPointer = CopyIcon(cursorInfo.hCursor);
                         int iconX, iconY;
 
                         if (GetIconInfo(iconPointer, out ICONINFO iconInfo))
                         {
-                            // calculate the correct position of the cursor
-                            iconX = cursorInfo.ptScreenPos.x - ((int)iconInfo.xHotspot);
-                            iconY = cursorInfo.ptScreenPos.y - ((int)iconInfo.yHotspot);
-
-                            // draw the cursor icon on top of the captured screen image
+                            iconX = cursorInfo.ptScreenPos.x - iconInfo.xHotspot;
+                            iconY = cursorInfo.ptScreenPos.y - iconInfo.yHotspot;
                             DrawIcon(g.GetHdc(), iconX, iconY, cursorInfo.hCursor);
-
-                            // release the handle created by call to g.GetHdc()
                             g.ReleaseHdc();
                         }
                     }
                 }
             }
+
             return bitmap;
         }
 
@@ -102,36 +97,23 @@ namespace RemoteControlServer
             return (mouseX, mouseY);
         }
 
-        [DllImport("user32.dll")]
-        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
-
-        public static void SimulateLeftMouseClick(int X, int Y)
-        {
-            mouse_event((uint)MouseEventFlags.MouseMove, (uint)X, (uint)Y, 0, 0);
-        }
-
-        // Метод для имитации нажатия правой кнопки мыши
-        public static void SimulateRightMouseClick(int X, int Y)
-        {
-        }
-
-        public static void ProcessMouseActions(MouseActions mouseAction, int X, int Y)
+        public static void ProcessMouseActions(MouseState mouseAction, int X, int Y)
         {
             uint dwFlags = 0;
 
             switch (mouseAction)
             {
-                case MouseActions.MouseLeft:
+                case MouseState.MouseLeft:
                     dwFlags = (uint)(MouseEventFlags.MouseLeftDown | MouseEventFlags.MouseLeftUp);
                     break;
-                case MouseActions.MouseRight:
+                case MouseState.MouseRight:
                     dwFlags = (uint)(MouseEventFlags.MouseRightDown | MouseEventFlags.MouseRightUp);
                     break;
-                case MouseActions.MouseDoubleClick:
+                case MouseState.MouseDoubleClick:
                     mouse_event((uint)(MouseEventFlags.MouseLeftDown | MouseEventFlags.MouseLeftUp), (uint)X, (uint)Y, 0, 0);
                     mouse_event((uint)(MouseEventFlags.MouseLeftDown | MouseEventFlags.MouseLeftUp), (uint)X, (uint)Y, 0, 0);
                     break;
-                case MouseActions.MouseMove:
+                case MouseState.MouseMove:
                     SetCursorPos(X, Y);
                     break;
             }

@@ -1,6 +1,7 @@
 using System.Net;
+using RemoteControlServer.Controllers.ServerClasses;
 
-namespace RemoteControlServer
+namespace RemoteControlServer.Views
 {
     public partial class StartServerForm : Form
     {
@@ -9,7 +10,7 @@ namespace RemoteControlServer
         public StartServerForm()
         {
             InitializeComponent();
-            ipAdressTextBox.Text = TcpServer.GetIpAdress();
+            ipAddressTextBox.Text = IpAddressOperations.GetIpAddress();
         }
 
         private void StartServerForm_Load(object sender, EventArgs e) => ActiveControl = portNumberNumericUpDown;
@@ -22,9 +23,9 @@ namespace RemoteControlServer
             await server.StartAsync();
         }
 
-        private bool AskPermission(string name)
+        private bool AskPermission(string description)
         {
-            var result = MessageBox.Show($"К вам хочет подключится пользователь {name}. Ответь ок для принятия или отмена для того, чтобы отказаться от трансляции своего экрана", "Вопрос", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            var result = MessageBox.Show(description, "Вопрос", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
             return result == DialogResult.OK;
         }
 

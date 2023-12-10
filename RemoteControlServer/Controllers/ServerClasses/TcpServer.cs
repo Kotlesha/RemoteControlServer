@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using RemoteControlServer.Models;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
-namespace RemoteControlServer
+namespace RemoteControlServer.Controllers.ServerClasses
 {
     internal class TcpServer
     {
@@ -36,7 +32,8 @@ namespace RemoteControlServer
                 try
                 {
                     client = await TcpListener.AcceptTcpClientAsync();
-                } catch (SocketException) { return; }
+                }
+                catch (SocketException) { return; }
                 HandleClientAsync(client);
             }
         }
@@ -53,29 +50,15 @@ namespace RemoteControlServer
                     int bytesRead = await stream.ReadAsync(buffer, Cts.Token);
                     string jsonRequest = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     Request request;
-                    try
-                    {
-                        request = JsonSerializer.Deserialize<Request>(jsonRequest);
-                    }
-                    catch
-                    {
-                        File.AppendAllText("str1.txt", jsonRequest + "\n");
-                        continue;
-                    }
-                    Response response = ProcessingRequests.GetResponseOnRequest(request, askPermission);
+                    try { request = JsonSerializer.Deserialize<Request>(jsonRequest); }
+                    catch { continue; }
+                    Response response = await ProcessingRequests.GetResponseOnRequest(request, askPermission);
                     string jsonResponse = JsonSerializer.Serialize(response);
                     byte[] bytesWrite = Encoding.UTF8.GetBytes(jsonResponse);
                     await stream.WriteAsync(bytesWrite, Cts.Token);
                     await stream.FlushAsync();
                 }
             }
-        }
-
-        public static string GetIpAdress()
-        {
-            string hostName = Dns.GetHostName();
-            string ipAdress = Dns.GetHostEntry(hostName).AddressList[0].ToString();
-            return ipAdress;
         }
 
         public void Stop()

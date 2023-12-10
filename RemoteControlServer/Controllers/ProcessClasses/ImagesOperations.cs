@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Drawing.Imaging;
 using Encoder = System.Drawing.Imaging.Encoder;
 
-namespace RemoteControlServer
+namespace RemoteControlServer.Controllers.ProcessClasses
 {
     internal static class ImagesOperations
     {
@@ -22,8 +15,7 @@ namespace RemoteControlServer
         private static Bitmap TakeScreenshot()
         {
             Rectangle bounds = Screen.PrimaryScreen.Bounds;
-            MouseInformation.GetCursorInfo(out MouseInformation.CURSORINFO cursor);
-            Bitmap screenshot = MouseInformation.Capture(cursor.ptScreenPos.x, cursor.ptScreenPos.y, bounds.Width, bounds.Height);
+            Bitmap screenshot = MouseOperations.CaptureImageWithCursor(bounds.Width, bounds.Height);
             return screenshot;
         }
 
